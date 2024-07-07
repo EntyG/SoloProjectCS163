@@ -21,6 +21,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Graph.py" />
     <Compile Include="Paths.py" />
     <Compile Include="RouteVars.py" />
     <Compile Include="SoloProjectCS163.py" />
