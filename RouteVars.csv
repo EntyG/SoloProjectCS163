@@ -1,0 +1,5 @@
+RouteId,RouteVarId,RouteVarName,RouteVarShortName,RouteNo,StartStop,EndStop,Distance,Outbound,RunningTime
+1,1,Lượt đi: Bến Thành - BX Chợ Lớn,Bến Xe buýt Chợ Lớn,01,Công Trường Mê Linh,Bến xe Chợ Lớn,8381.0,True,35
+1,2,Lượt về: BX Chợ Lớn - Bến Thành,Bến Thành,01,Bến xe Chợ Lớn,Công Trường Mê Linh,9458.0,False,35
+3,5,Lượt đi: Bến Thành - Thạnh Lộc,Thạnh Lộc,03,Bến xe buýt Sài Gòn,THẠNH LỘC,21456.0,True,70
+3,6,Lượt về: Thạnh Lộc - Bến Thành,Bến Thành,03,THẠNH LỘC,Bến xe buýt Sài Gòn,21704.0,False,70
