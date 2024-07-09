@@ -72,5 +72,10 @@ class RouteVarsQuery:
 if __name__ == "__main__":
     route_vars_query = RouteVarsQuery()
     route_vars_query.readJSONInput("vars.json")
-    route_vars_query.outputAsCSV("test_vars.csv")
-
+    count = 0
+    for route_vars in route_vars_query.getRouteVars():
+        for idx in range(2):
+            if route_vars.getProperty(idx,"RouteId") is not None:
+                print(route_vars.getProperty(idx, "RouteId"), route_vars.getProperty(idx, "RouteVarId"))
+                count += 1    
+    print(count)
