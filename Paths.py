@@ -54,24 +54,27 @@ def LngLat_To_XY(Lng, Lat):
 def XY_To_LngLat(x,y):
     return P(x, y, inverse=True)
             
+def almostEqual(a, b, epsilon=1e-4):
+    return abs(a - b) < epsilon
+
 def distance(source_path, stop1, stop2):
     lng1 = stop1.getProperty("Lng")
     lat1 = stop1.getProperty("Lat")
     lng2 = stop2.getProperty("Lng")
     lat2 = stop2.getProperty("Lat")
-    founded = False;
+    founded = False
     lats = source_path.getProperty("lat")
     lngs = source_path.getProperty("lng")
     
     res = 0.0
     for i in range(len(lats)):
-        if lats[i] == lat1 and lngs[i] == lng1:
+        if almostEqual(lats[i], lat1) and  almostEqual(lngs[i], lng1):
             founded = True
         if founded:
             x_i, y_i = LngLat_To_XY(lngs[i - 1], lats[i - 1])
             x_f, y_f = LngLat_To_XY(lngs[i], lats[i])
             res += ((x_f-x_i)**2 + (y_f-y_i)**2)**0.5
-        if lats[i] == lat2 and lngs[i] == lng2:
+        if  almostEqual(lats[i], lat2) and  almostEqual(lngs[i], lng2):
             break
     return res
 

@@ -26,7 +26,6 @@
     <Compile Include="RouteVars.py" />
     <Compile Include="SoloProjectCS163.py" />
     <Compile Include="Stops.py" />
-    <Compile Include="test.py" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
