@@ -22,7 +22,8 @@ class ProgressEvent:
         with self.lock:
             self.completed_tasks += value
 
-def print_progress_bar(progress_event, total_tasks, start_time, length=50):
+def print_progress_bar(progress_event, total_tasks, task_name , length=50):
+    start_time = time.time()
     try:
         while not progress_event.is_set():
             with progress_event.lock:
@@ -35,7 +36,7 @@ def print_progress_bar(progress_event, total_tasks, start_time, length=50):
             bar_length = int(length * (percentage / 100.0))
             bar = '█' * bar_length + '-' * (length - bar_length)
             
-            sys.stdout.write(f'\r|{bar}| {percentage:.2f}% '
+            sys.stdout.write(f'\rRunning {task_name}... |{bar}| {percentage:.2f}% '
                              f'Elapsed: {elapsed_time:.2f}s '
                              f'Remaining: {estimated_remaining_time:.2f}s')
             sys.stdout.flush()
@@ -46,13 +47,12 @@ def print_progress_bar(progress_event, total_tasks, start_time, length=50):
         progress_event.set()
         sys.stdout.write(f'\nError occurred: {str(e)}\n')
 
-    sys.stdout.write('\r|{}| 100.00%\n'.format('█' * length))
 
 #store data take 40m, non storing take 10m
 def allPairs():  
     start = time.time()
     graph = Graph()
-    graph.buildGraph("stops.json", "vars.json", "paths.json")
+    graph.buildGraph("stops.json", "vars.json", "paths.json", "fixed_paths.json")
     max_time = 0
     min_time = inf
 
@@ -64,7 +64,7 @@ def allPairs():
 
     progress_event = ProgressEvent()
     
-    progress_thread = threading.Thread(target=print_progress_bar, args=(progress_event, total_tasks, start))
+    progress_thread = threading.Thread(target=print_progress_bar, args=(progress_event, total_tasks, "all pairs"))
     progress_thread.start()
     
     for i in range(n):
@@ -91,7 +91,7 @@ def allPairs():
 def storeAllPairs(file_name):
     start = time.time()
     graph = Graph()
-    graph.buildGraph("stops.json", "vars.json", "paths.json")
+    graph.buildGraph("stops.json", "vars.json", "paths.json", "fixed_paths.json")
     max_time = 0
     min_time = inf
 
@@ -103,7 +103,7 @@ def storeAllPairs(file_name):
 
     progress_event = ProgressEvent()
     
-    progress_thread = threading.Thread(target=print_progress_bar, args=(progress_event, total_tasks, start))
+    progress_thread = threading.Thread(target=print_progress_bar, args=(progress_event, total_tasks, "all pairs"))
     progress_thread.start()
     
     with open(file_name, 'w') as f:
@@ -142,49 +142,47 @@ def measure_algorithm_performance(num_tests, stops_file, vars_file, paths_file, 
     stop_ids = [stop.getProperty('StopId') for stop in stops_list]
     
     def measure_time(func):
+        total_tasks = num_tests
+        progress_event = ProgressEvent()
+    
+        progress_thread = threading.Thread(target=print_progress_bar, args=(progress_event, total_tasks, func.__name__))
+        progress_thread.start()
         total_time = 0.0
-        pairs = list() 
         for _ in range(num_tests):
             start_id, goal_id = random.sample(stop_ids, 2)
-            pairs.append((start_id, goal_id))
-        pairs = sorted(pairs, key=lambda x: x[0])
-        current_start = pairs[0][0]
-        for start_id, goal_id in pairs:
-            if start_id != current_start:
-                graph.reset()
-                current_start = start_id
             start_time = time.time()
             func(start_id, goal_id)
-            total_time += time.time() - start_time
-        return total_time / num_tests
+            graph.reset()
+            end_time = time.time()
+            total_time += (end_time - start_time)
+            progress_event.increment()
+            
+        end = time.time()
+        
+        progress_event.set()
+        progress_thread.join()
+        return total_time
 
-    print("Shortest path finding algorithm performance:")
+    # avg_dijkstra_distance_time = measure_time(graph.dijkstraDistanceBase)
 
-    # Measure average running time of Dijkstra's distance-based algorithm
-    avg_dijkstra_distance_time = measure_time(graph.shortestPath)
-    print(f'Average running time of Dijkstra: {avg_dijkstra_distance_time:.6f} seconds')
+    # avg_astar_distance_time = measure_time(graph.aStarDistanceBase)
 
-    # Measure average running time of A* distance-based algorithm
-    avg_astar_distance_time = measure_time(graph.aStarDistanceBase)
-    print(f'Average running time of A*: {avg_astar_distance_time:.6f} seconds')
+    # avg_path_caching_shortest_time = measure_time(graph.shortestPathWithCache)
 
-    # Measure average running time of shortest path with cache
-    avg_path_caching_shortest_time = measure_time(graph.shortestPathWithCache)
-    print(f'Average running time of path caching combine with A*: {avg_path_caching_shortest_time:.6f} seconds')
+    avg_dijkstra_time_time = measure_time(graph.dijkstraTimeBase)
 
-    print("Fastest path finding algorithm performance:") 
-
-    # Measure average running time of Dijkstra's time-based algorithm
-    avg_dijkstra_time_time = measure_time(graph.fastestPath)
-    print(f'Average running time of Dijkstra: {avg_dijkstra_time_time:.6f} seconds')
-
-    # Measure average running time of A* time-based algorithm
     avg_astar_time_time = measure_time(graph.aStarTimeBase)
-    print(f'Average running time of A*: {avg_astar_time_time:.6f} seconds')
 
-    # Measure average running time of fastest path with cache
     avg_path_caching_fastest_time = measure_time(graph.fastestPathWithCache)
-    print(f'Average running time of path caching combine with A*: {avg_path_caching_fastest_time:.6f} seconds')
+
+    # print("\rShortest path finding algorithm performance:                                                                                                        ")
+    # print(f'Dijkstra: {avg_dijkstra_distance_time:.6f} seconds')
+    # print(f'A*: {avg_astar_distance_time:.6f} seconds')
+    # print(f'Path caching: {avg_path_caching_shortest_time:.6f} seconds')
+    # print("Fastest path finding algorithm performance:") 
+    print(f'Dijkstra: {avg_dijkstra_time_time:.6f} seconds')
+    print(f'A*: {avg_astar_time_time:.6f} seconds')
+    print(f'Path caching: {avg_path_caching_fastest_time:.6f} seconds')
     
 if __name__ == "__main__":
-    measure_algorithm_performance(1000, "stops.json", "vars.json", "paths.json", "fixed_paths.json")
+    measure_algorithm_performance(10000, "stops.json", "vars.json", "paths.json", "fixed_paths.json")

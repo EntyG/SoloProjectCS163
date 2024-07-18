@@ -46,13 +46,22 @@ class PathQuery:
        
 import pyproj
 
-P = pyproj.Proj('EPSG:3405')
+wgs84_crs = pyproj.CRS("EPSG:4326")
+utm_vn_crs = pyproj.CRS("EPSG:3405")
+transformer_to_utm = pyproj.Transformer.from_proj(wgs84_crs, utm_vn_crs, always_xy=True)
+transformer_to_wgs84 = pyproj.Transformer.from_proj(utm_vn_crs, wgs84_crs, always_xy=True)
 
 def LngLat_To_XY(Lng, Lat):
-    return P(Lng, Lat)    
-
-def XY_To_LngLat(x,y):
-    return P(x, y, inverse=True)
+    if Lng is None or Lat is None:
+        return None, None
+    x, y = transformer_to_utm.transform(Lng, Lat)
+    return x, y
+   
+def XY_To_LngLat(x, y):
+    if x is None or y is None:
+        return None, None
+    Lng, Lat = transformer_to_wgs84.transform(x, y)
+    return Lng, Lat
             
 def almostEqual(a, b, epsilon=1e-4):
     return abs(a - b) < epsilon
@@ -68,12 +77,15 @@ def distance(source_path, stop1, stop2):
     
     res = 0.0
     for i in range(len(lats)):
-        if almostEqual(lats[i], lat1) and  almostEqual(lngs[i], lng1):
-            founded = True
         if founded:
             x_i, y_i = LngLat_To_XY(lngs[i - 1], lats[i - 1])
             x_f, y_f = LngLat_To_XY(lngs[i], lats[i])
-            res += ((x_f-x_i)**2 + (y_f-y_i)**2)**0.5
+            if None not in [x_i, y_i, x_f, y_f]:
+                res += ((x_f-x_i)**2 + (y_f-y_i)**2)**0.5
+
+        if almostEqual(lats[i], lat1) and  almostEqual(lngs[i], lng1):
+            founded = True
+        
         if  almostEqual(lats[i], lat2) and  almostEqual(lngs[i], lng2):
             break
     return res
