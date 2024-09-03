@@ -85,7 +85,6 @@ def calculate_all_pairs_shortest_paths(graph):
     for stop_id in graph.stops:
         graph.dijkstra(stop_id)
         cnt+=1
-        print(f"Calculating shortest paths for stop {cnt}/{n}")
         for stop_id_2 in graph.stops:
             if stop_id_2 != stop_id:
                 path = graph.shortest_paths.get((stop_id, stop_id_2), [])
