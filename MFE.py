@@ -57,3 +57,9 @@ def read_edge_matrix(file_name):
             edge_matrix[key] = value
     return edge_matrix
 
+def find_most_frequent_edge(edge_matrix, edge_i, edge_j):
+    if (edge_i, edge_j) in edge_matrix:
+        return edge_matrix[(edge_i, edge_j)]
+    else:
+        return None
+
