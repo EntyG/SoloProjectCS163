@@ -1,7 +1,8 @@
-import pandas as pd
+import csv
 from collections import defaultdict
 import heapq
-import sys
+import time
+from datetime import datetime
 
 class BusStopNode:
     def __init__(self, route_id, var_id, stop_id, timestamp, node_type, latx, lngy):
@@ -20,10 +21,20 @@ class Edge:
         self.travel_time = travel_time
 
 def load_data(file_path):
-    data = pd.read_csv(file_path, header=None)
-    # Convert timestamps from seconds to datetime
-    data[3] = pd.to_datetime(data[3], unit='s')
-    data[7] = pd.to_datetime(data[7], unit='s')
+    data = []
+    with open(file_path, 'r') as file:
+        reader = csv.reader(file)
+        for row in reader:
+            row[0] = int(row[0])
+            row[1] = int(row[1])
+            row[2] = int(row[2])
+            row[3] = int(float(row[3]))  # Convert timestamp
+            row[4] = int(row[4])
+            row[7] = int(float(row[7]))  # Convert timestamp
+            row[8] = float(row[8])
+            row[9] = float(row[9])
+            row[10] = float(row[10])
+            data.append(row)
     return data
 
 class Graph:
@@ -84,7 +95,8 @@ def calculate_all_pairs_shortest_paths(graph):
 
     for stop_id in graph.stops:
         graph.dijkstra(stop_id)
-        cnt+=1
+        print(f"Calculating shortest paths for stop {cnt}/{n}" + " " * 10, end="\r")
+        cnt += 1
         for stop_id_2 in graph.stops:
             if stop_id_2 != stop_id:
                 path = graph.shortest_paths.get((stop_id, stop_id_2), [])
@@ -93,10 +105,8 @@ def calculate_all_pairs_shortest_paths(graph):
         graph.reset()
     return stop_importance
 
-
-def build_graph(data):
-    graph = Graph()
-    for _, row in data.iterrows():
+def build_graph(graph, data):
+    for row in data:
         start_node = BusStopNode(
             row[1], row[2], row[0], row[3], row[14], row[9], row[10]
         )
@@ -108,16 +118,13 @@ def build_graph(data):
         graph.add_stop(end_node)
 
         transfers = 0 if row[1] == row[5] else 1
-        travel_time = row[8]
+        travel_time = int(row[8])
 
         graph.add_edge(start_node.stop_id, end_node.stop_id, transfers, travel_time)
-    return graph
 
 def get_top_k_stops(stop_importance, k):
     top_k_stops = sorted(stop_importance.items(), key=lambda x: x[1], reverse=True)[:k]
     return top_k_stops
-
-import time
 
 def analyze_runtime():
     # Measure the runtime of each phase of the program
@@ -131,8 +138,9 @@ def analyze_runtime():
     
     # 2. Graph Building Phase
     start_time = time.time()
-    graph = build_graph(data_type12)
-    graph = build_graph(data_type34)
+    graph = Graph()
+    build_graph(graph, data_type12)
+    build_graph(graph, data_type34)
     graph_building_time = time.time() - start_time
     print(f"Graph building time: {graph_building_time:.4f} seconds")
 
@@ -146,6 +154,7 @@ def analyze_runtime():
     k = 5
     start_time = time.time()
     top_k_stops = get_top_k_stops(stop_importance, k)
+    print(f"Top {k} stops: {top_k_stops}")
     top_k_calculation_time = time.time() - start_time
     print(f"Top {k} stops calculation time: {top_k_calculation_time:.4f} seconds")
 
